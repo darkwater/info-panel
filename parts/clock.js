@@ -2,9 +2,9 @@ setInterval(function ()
 {
     process.send({
         type: 'text',
-        order: 0,
+        slot:  1,
         color: 'ffaf00',
-        icon: 'test',
+        icon: 'clock',
         text: 'world greets'
     });
 }, 1000);

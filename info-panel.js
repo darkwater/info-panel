@@ -12,7 +12,8 @@ var settings = [
 
 var dzen_processes = [],
     screens        = 0,
-    parts          = [];
+    parts          = [],
+    buffer         = [];
 
 
 function write(data)
@@ -21,6 +22,19 @@ function write(data)
     {
         v.stdin.write(data);
     });
+}
+
+function update()
+{
+    for (var i = buffer.length - 1; i >= 0; i--)
+    {
+        if (!buffer[i]) continue;
+
+        write('^fg(#717171)\\\\ ');
+        write(buffer[i]);
+        write(' ');
+    }
+    write(" \n");
 }
 
 
@@ -47,9 +61,17 @@ cp.exec('xrandr | grep -c "*"', function (error, stdout, stderr)
     {
         parts[file] = cp.fork(__dirname + '/parts/' + file.match(/[^.]+/)[0]);
         
-        parts[file].on("message", function (msg)
+        parts[file].on('message', function (data)
         {
-            write(msg.text + "\n");
+            switch (data.type)
+            {
+                case 'text':
+                    buffer[data.slot] = '^fg(#' + data.color + ')'
+                                      + '^i(/home/dark/projects/info-panel/icons/' + data.icon + '.xbm) '
+                                      + data.text;
+            }
+
+            update();
         });
     });
 });
