@@ -67,7 +67,7 @@ cp.exec('xrandr | grep -c "*"', function (error, stdout, stderr)
             {
                 case 'text':
                     buffer[data.slot] = '^fg(#' + data.color + ')'
-                                      + '^i(/home/dark/projects/info-panel/icons/' + data.icon + '.xbm) '
+                                      + ((data.icon) ? ('^i(/home/dark/projects/info-panel/icons/' + data.icon + '.xbm) ') : '')
                                       + data.text;
             }
 
