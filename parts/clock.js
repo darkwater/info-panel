@@ -28,7 +28,12 @@ function clock()
         slot:  1,
         color: 'ffaf00',
         // icon: 'clock',
-        text: str
+        text: str,
+        popup: {
+            cols: 71,
+            lines: 35,
+            command: 'echo -e "\\e[?1000h\\e[?25l"; cal -my --color=always | head -n -2 | sed "s/^/  /"; read -sn 12'
+        }
     });
 
     setTimeout(clock, 1000 - (new Date()).getMilliseconds());

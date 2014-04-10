@@ -1,5 +1,6 @@
 var cp = require('child_process'),
-    fs = require('fs');
+    fs = require('fs'),
+    net = require('net');
 
 var settings = [
     '-bg', '#1d1f21', // Background color
@@ -13,7 +14,8 @@ var settings = [
 var dzen_processes = [],
     screens        = 0,
     parts          = [],
-    buffer         = [];
+    buffer         = [],
+    popups         = [];
 
 
 function write(data)
@@ -36,6 +38,30 @@ function update()
     }
     write(" \n");
 }
+
+
+var server = net.createServer(function (c)
+{
+    c.on('data', function (data)
+    {
+        var part = data.toString().replace(/\n/g, '');
+        
+        if (popups[part])
+        {
+            var popup = popups[part];
+
+            var w = popup.cols * 6 + 2,
+                h = popup.lines * 13 + 2,
+                x = 1920 - w,
+                y = 1056 - h,
+                geom = w +'x'+ h +'+'+ x +'+'+ y;
+
+            cp.spawn('terminator', ['--geometry=' + geom, '-x', 'bash', '-c', popup.command]);
+        }
+    });
+});
+
+server.listen(1150);
 
 
 cp.exec('xrandr | grep -c "*"', function (error, stdout, stderr)
@@ -66,10 +92,15 @@ cp.exec('xrandr | grep -c "*"', function (error, stdout, stderr)
             switch (data.type)
             {
                 case 'text':
-                    buffer[data.slot] = '^fg(#' + data.color + ')'
+                    buffer[data.slot] = (data.popup ? ('^ca(1,echo ' + data.slot + ' | nc localhost 1150)') : '')
+                                      + '^fg(#' + data.color + ')'
                                       + ((data.icon) ? ('^i(/home/dark/projects/info-panel/icons/' + data.icon + '.xbm) ') : '')
-                                      + data.text;
+                                      + data.text
+                                      + (data.popup ? '^ca()' : '');
             }
+
+            if (data.popup) popups[data.slot] = data.popup;
+            else delete popups[data.slot];
 
             update();
         });
