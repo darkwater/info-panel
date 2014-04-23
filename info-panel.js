@@ -40,6 +40,14 @@ function update()
 }
 
 
+var specials = {};
+
+specials.P = function (percent)
+{
+    return '^r(' + Math.floor(percent * 0.6) + 'x5)^ro(' + Math.ceil(60 - percent * 0.6) + 'x5)';
+}
+
+
 var server = net.createServer(function (c)
 {
     c.on('data', function (data)
@@ -89,15 +97,16 @@ cp.exec('xrandr | grep -c "*"', function (error, stdout, stderr)
         
         parts[file].on('message', function (data)
         {
-            switch (data.type)
+            var str = data.text.replace(/\[!(.):([^\]]+)]/, function (match, type, args, offset, str)
             {
-                case 'text':
-                    buffer[data.slot] = (data.popup ? ('^ca(1,echo ' + data.slot + ' | nc localhost 1150)') : '')
-                                      + '^fg(#' + data.color + ')'
-                                      + ((data.icon) ? ('^i(/home/dark/projects/info-panel/icons/' + data.icon + '.xbm) ') : '')
-                                      + data.text
-                                      + (data.popup ? '^ca()' : '');
-            }
+                return specials[type].apply(data, args.split(' '));
+            });
+
+            buffer[data.slot] = (data.popup ? ('^ca(1,echo ' + data.slot + ' | nc localhost 1150)') : '')
+                              + '^fg(#' + data.color + ')'
+                              + ((data.icon) ? ('^i(' + __dirname + '/icons/' + data.icon + '.xbm) ') : '')
+                              + str
+                              + (data.popup ? '^ca()' : '');
 
             if (data.popup) popups[data.slot] = data.popup;
             else delete popups[data.slot];

@@ -14,7 +14,6 @@ function disk_space()
         });
 
         process.send({
-            type: 'text',
             slot:  2,
             color: 'ffd700',
             // icon: 'disk',
