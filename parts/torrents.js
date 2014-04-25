@@ -56,4 +56,4 @@ function torrents()
     });
 }
 
-torrents();
+if (transmission) torrents();
